@@ -64,9 +64,9 @@ export function AppIcon({
   return (
     <SymbolView
       name={{
-        ios: iconDef.ios,
-        android: iconDef.android,
-        web: iconDef.web,
+        ios: iconDef.ios as any,
+        android: iconDef.android as any,
+        web: iconDef.web as any,
       }}
       size={size}
       tintColor={tintColor}
