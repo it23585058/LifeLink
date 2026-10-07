@@ -9,7 +9,6 @@ const COMPONENT_LABELS: Record<string, string> = {
 };
 
 export function StockTile({ item }: { item: StockItem }) {
-  const isAvailable = item.status === 'available';
   const isLow = item.status === 'low';
   const isOut = item.status === 'out';
 

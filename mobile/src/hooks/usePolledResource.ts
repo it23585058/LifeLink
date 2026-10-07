@@ -11,20 +11,26 @@ export function usePolledResource<T>(
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
+
   const isFocusedRef = useRef(true);
   const fetcherRef = useRef(fetcher);
-  fetcherRef.current = fetcher;
 
-  const loadData = useCallback(async (isRefresh = false) => {
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  }, [fetcher]);
+
+  const executeFetch = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
-    } else if (!data) {
+    } else {
       setLoading(true);
     }
     setError(null);
     try {
       const result = await fetcherRef.current();
       setData(result);
+      setLastFetchedAt(Date.now());
     } catch (err: any) {
       setError(
         err?.response?.data?.error ||
@@ -35,18 +41,18 @@ export function usePolledResource<T>(
       setLoading(false);
       setRefreshing(false);
     }
-  }, [data]);
+  }, []);
 
   // Refetch when screen gains focus
   useFocusEffect(
     useCallback(() => {
       isFocusedRef.current = true;
-      loadData();
+      void executeFetch();
 
       return () => {
         isFocusedRef.current = false;
       };
-    }, [loadData])
+    }, [executeFetch])
   );
 
   // Polling timer that runs only while screen is focused
@@ -55,22 +61,48 @@ export function usePolledResource<T>(
 
     const timer = setInterval(() => {
       if (isFocusedRef.current) {
-        loadData();
+        void executeFetch();
       }
     }, intervalMs);
 
     return () => clearInterval(timer);
-  }, [intervalMs, loadData]);
+  }, [intervalMs, executeFetch]);
 
-  // Reload when dependencies change
+  // Initial and dependency triggered load
   useEffect(() => {
-    loadData();
+    let active = true;
+    void (async () => {
+      try {
+        const result = await fetcherRef.current();
+        if (active) {
+          setData(result);
+          setLastFetchedAt(Date.now());
+          setError(null);
+        }
+      } catch (err: any) {
+        if (active) {
+          setError(
+            err?.response?.data?.error ||
+              err?.message ||
+              'Failed to load data.'
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   const refresh = useCallback(() => {
-    return loadData(true);
-  }, [loadData]);
+    return executeFetch(true);
+  }, [executeFetch]);
 
   return {
     data,
@@ -79,5 +111,6 @@ export function usePolledResource<T>(
     error,
     refresh,
     setData,
+    lastFetchedAt,
   };
 }

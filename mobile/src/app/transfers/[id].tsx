@@ -353,7 +353,7 @@ export default function TransferCoordinationScreen() {
               </View>
               <View style={styles.pingTextCol}>
                 <View style={styles.pingTitleRow}>
-                  <Text style={styles.pingTitle}>I've Arrived at Main Gate</Text>
+                  <Text style={styles.pingTitle}>I&apos;ve Arrived at Main Gate</Text>
                   <View style={styles.gateTag}>
                     <Text style={styles.gateTagText}>#GT-881</Text>
                   </View>

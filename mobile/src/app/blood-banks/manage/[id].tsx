@@ -242,7 +242,7 @@ export default function ManageStockScreen() {
           <View style={styles.guidanceBanner}>
             <AppIcon name="shield" size={18} tintColor="#0878A8" />
             <Text style={styles.guidanceText}>
-              Use the +/− steppers to update live units. Setting units to 0 marks stock as out. Use "Remove" only to delete mistaken rows.
+              Use the +/− steppers to update live units. Setting units to 0 marks stock as out. Use &quot;Remove&quot; only to delete mistaken rows.
             </Text>
           </View>
         }

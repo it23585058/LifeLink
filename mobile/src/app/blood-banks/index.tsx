@@ -4,7 +4,6 @@ import {
   Modal,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -64,6 +63,7 @@ export default function HospitalBloodBanksScreen() {
     refreshing,
     error,
     refresh,
+    lastFetchedAt,
   } = usePolledResource<Hospital[]>(fetchHospitals, 30_000, [selectedGroup]);
 
   const { data: summary, refresh: refreshSummary } =
@@ -89,10 +89,11 @@ export default function HospitalBloodBanksScreen() {
         if (time > latest) latest = time;
       }
     }
-    if (latest === 0) return 3;
-    const diff = Math.max(1, Math.floor((Date.now() - latest) / 60000));
+    const referenceTime = lastFetchedAt || 0;
+    if (latest === 0 || referenceTime === 0) return 3;
+    const diff = Math.max(1, Math.floor((referenceTime - latest) / 60000));
     return diff;
-  }, [hospitals]);
+  }, [hospitals, lastFetchedAt]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
