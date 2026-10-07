@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "seed:hospitals": "node scripts/seedHospitals.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

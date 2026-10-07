@@ -45,7 +45,7 @@ router.get('/summary', async (request, response, next) => {
 
     const criticalShortages = [];
     for (const group of ALL_BLOOD_GROUPS) {
-      if (groupTotals[group] < 4) {
+      if (groupTotals[group] <= 4) {
         criticalShortages.push({
           bloodGroup: group,
           totalUnits: groupTotals[group],
