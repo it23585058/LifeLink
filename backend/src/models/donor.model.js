@@ -8,7 +8,18 @@ const donorSchema = new mongoose.Schema(
     city: { type: String, required: true, trim: true },
     available: { type: Boolean, default: true },
     lastDonationAt: { type: Date },
+  
+
+  nic: { type: String, trim: true, uppercase: true, unique: true, sparse: true },
+    eligibility: {
+      ageWeightOk: { type: Boolean, default: false },
+      donationIntervalOk: { type: Boolean, default: false },
+      medicalSafetyOk: { type: Boolean, default: false },
+    },
+    emergencyAlerts: { type: Boolean, default: true },
+    travelRadiusKm: { type: Number, default: 5 },
   },
+
   { timestamps: true }
 );
 
