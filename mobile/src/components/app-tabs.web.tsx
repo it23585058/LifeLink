@@ -27,6 +27,8 @@ export default function AppTabs() {
           <TabTrigger name="emergency-feed" href="/emergency-feed" asChild>
             <TabButton>Emergency Feed</TabButton>
           </TabTrigger>
+           <TabTrigger name="role-select" href="/role-select" style={{ display: 'none' }} />
+          <TabTrigger name="donor-register" href="/donor-register" style={{ display: 'none' }} />
         </CustomTabList>
       </TabList>
     </Tabs>
