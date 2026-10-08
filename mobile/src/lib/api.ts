@@ -22,6 +22,7 @@ export type Donor = {
   city: string;
   available: boolean;
   lastDonationAt?: string;
+  password: string
 };
 
 export type BloodRequest = {
