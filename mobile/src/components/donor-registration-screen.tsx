@@ -47,6 +47,8 @@ type FormErrors = {
   nic?: string;
   phone?: string;
   city?: string;
+  password?: string;
+  confirmPassword?: string;
   bloodGroup?: string;
   eligibility?: string;
 };
@@ -64,6 +66,8 @@ export function DonorRegistrationScreen() {
   const [nic, setNic] = useState('');
   const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [bloodGroup, setBloodGroup] = useState<string | null>(null);
   const [ageWeightOk, setAgeWeightOk] = useState(false);
   const [donationIntervalOk, setDonationIntervalOk] = useState(false);
@@ -84,6 +88,8 @@ export function DonorRegistrationScreen() {
     if (!NIC_PATTERN.test(nic.trim())) next.nic = 'Use 9 digits + V/X, or 12 digits.';
     if (!PHONE_PATTERN.test(phone.replace(/[\s-]/g, ''))) next.phone = 'Use a Sri Lankan mobile number, e.g. 077 123 4567.';
     if (city.trim().length < 2) next.city = 'Enter your city.';
+    if (password.length < 8) next.password = 'Use at least 8 characters.';
+    if (confirmPassword !== password) next.confirmPassword = 'Passwords do not match.';
     if (!bloodGroup) next.bloodGroup = 'Pick a blood group, or choose "I don\'t know my blood type".';
     if (!allEligible) next.eligibility = 'You need to confirm all three checks to register as a donor.';
     setErrors(next);
@@ -95,6 +101,8 @@ export function DonorRegistrationScreen() {
     setNic('');
     setPhone('');
     setCity('');
+    setPassword('');
+    setConfirmPassword('');
     setBloodGroup(null);
     setAgeWeightOk(false);
     setDonationIntervalOk(false);
@@ -116,14 +124,15 @@ export function DonorRegistrationScreen() {
         nic: nic.trim().toUpperCase(),
         phone: normalizePhone(phone),
         city: city.trim(),
+        password,
         bloodGroup,
         available: emergencyAlerts,
         eligibility: { ageWeightOk, donationIntervalOk, medicalSafetyOk },
         emergencyAlerts,
         travelRadiusKm,
       });
-      setSuccessId(donor._id);
       resetForm();
+      router.replace({ pathname: '/donor-home', params: { donorId: donor._id } });
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const serverMessage = error.response?.data?.error as string | undefined;
@@ -150,7 +159,7 @@ export function DonorRegistrationScreen() {
         <KeyboardAvoidingView style={styles.safeArea} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <View style={styles.headerRow}>
-             <Pressable accessibilityLabel="Back" onPress={() => router.replace('/role-select')} style={styles.backButton}>
+              <Pressable accessibilityLabel="Back" onPress={() => router.replace('/role-select')} style={styles.backButton}>
                 <ThemedText style={styles.backText}>‹</ThemedText>
               </Pressable>
               <View style={styles.headerTitleBlock}>
@@ -225,6 +234,32 @@ export function DonorRegistrationScreen() {
                   placeholderTextColor="#9AA3B5"
                   style={[styles.input, errors.city && styles.inputError]}
                   accessibilityLabel="City"
+                />
+              </Field>
+
+              <Field label="Password" error={errors.password}>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="At least 8 characters"
+                  placeholderTextColor="#9AA3B5"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  style={[styles.input, errors.password && styles.inputError]}
+                  accessibilityLabel="Password"
+                />
+              </Field>
+
+              <Field label="Confirm password" error={errors.confirmPassword}>
+                <TextInput
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Re-enter password"
+                  placeholderTextColor="#9AA3B5"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  style={[styles.input, errors.confirmPassword && styles.inputError]}
+                  accessibilityLabel="Confirm password"
                 />
               </Field>
             </View>
@@ -359,6 +394,12 @@ export function DonorRegistrationScreen() {
                 Confirm all three eligibility checks to register.
               </ThemedText>
             )}
+
+            <Pressable onPress={() => router.push('/donor-login' as never)} style={styles.loginLink}>
+              <ThemedText type="small" style={styles.loginLinkText}>
+                Already registered? <ThemedText type="smallBold" style={styles.loginLinkBold}>Log in</ThemedText>
+              </ThemedText>
+            </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -467,4 +508,8 @@ const styles = StyleSheet.create({
   submitButtonDim: { opacity: 0.6 },
   submitText: { color: '#FFFFFF', fontSize: 16 },
   submitHint: { color: palette.muted, fontSize: 12, textAlign: 'center' },
+
+  loginLink: { alignItems: 'center', paddingVertical: Spacing.two },
+  loginLinkText: { color: palette.muted, fontSize: 13 },
+  loginLinkBold: { color: palette.red, fontSize: 13 },
 });

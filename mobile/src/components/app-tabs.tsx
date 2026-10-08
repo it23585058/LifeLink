@@ -27,10 +27,6 @@ export default function AppTabs() {
           renderingMode="template"
         />
       </NativeTabs.Trigger>
-       {/* Member 1: hidden routes (no tab button) */}
-      <NativeTabs.Trigger name="role-select" hidden />
-      <NativeTabs.Trigger name="donor-register" hidden />
-    
     </NativeTabs>
   );
 }
