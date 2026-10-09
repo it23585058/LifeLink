@@ -3,14 +3,14 @@ const mongoose = require('mongoose');
 
 const Reservation = require('../models/reservation.model');
 const BloodInventory = require('../models/blood-inventory.model');
+const requireAuth = require('../middleware/requireAuth');
 
 const router = express.Router();
 
-router.post('/', async (request, response, next) => {
+router.post('/', requireAuth, async (request, response, next) => {
   try {
     const { hospital, bloodGroup, component, units, note } = request.body;
-    const reservedBy =
-      request.headers['x-demo-user'] || request.body.reservedBy || 'demo-user';
+    const reservedBy = request.auth.donorId;
 
     if (!hospital || !mongoose.isValidObjectId(hospital)) {
       return response.status(400).json({ error: 'Valid hospital ID is required.' });
@@ -82,11 +82,16 @@ router.post('/', async (request, response, next) => {
   }
 });
 
-router.get('/', async (request, response, next) => {
+router.get('/', requireAuth, async (request, response, next) => {
   try {
     const filter = {};
     if (request.query.reservedBy) {
-      filter.reservedBy = request.query.reservedBy;
+      if (String(request.query.reservedBy) !== String(request.auth.donorId)) {
+        return response.status(403).json({ error: 'You can only view your own reservations.' });
+      }
+      filter.reservedBy = request.auth.donorId;
+    } else {
+      filter.reservedBy = request.auth.donorId;
     }
     if (request.query.hospital) {
       if (!mongoose.isValidObjectId(request.query.hospital)) {
@@ -109,7 +114,7 @@ router.get('/', async (request, response, next) => {
   }
 });
 
-router.put('/:id', async (request, response, next) => {
+router.put('/:id', requireAuth, async (request, response, next) => {
   try {
     if (!mongoose.isValidObjectId(request.params.id)) {
       return response.status(400).json({ error: 'Invalid reservation ID.' });
@@ -118,6 +123,13 @@ router.put('/:id', async (request, response, next) => {
     const { status } = request.body;
     if (!status || !['cancelled', 'collected'].includes(status)) {
       return response.status(400).json({ error: "Status must be either 'cancelled' or 'collected'." });
+    }
+    const ownedReservation = await Reservation.findOne({
+      _id: request.params.id,
+      reservedBy: request.auth.donorId,
+    });
+    if (!ownedReservation) {
+      return response.status(403).json({ error: 'You can only modify your own reservations.' });
     }
 
     const updated = await Reservation.findOneAndUpdate(
@@ -154,7 +166,7 @@ router.put('/:id', async (request, response, next) => {
   }
 });
 
-router.delete('/:id', async (request, response, next) => {
+router.delete('/:id', requireAuth, async (request, response, next) => {
   try {
     if (!mongoose.isValidObjectId(request.params.id)) {
       return response.status(400).json({ error: 'Invalid reservation ID.' });
@@ -163,6 +175,9 @@ router.delete('/:id', async (request, response, next) => {
     const reservation = await Reservation.findById(request.params.id);
     if (!reservation) {
       return response.status(404).json({ error: 'Reservation not found.' });
+    }
+    if (String(reservation.reservedBy) !== String(request.auth.donorId)) {
+      return response.status(403).json({ error: 'You can only delete your own reservations.' });
     }
 
     if (reservation.status === 'pending') {

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { donorSession } from '@/lib/donor-session';
 
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -14,6 +15,14 @@ const api = axios.create({
   },
 });
 
+api.interceptors.request.use(async (config) => {
+  const token = await donorSession.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export type Donor = {
   _id: string;
   name: string;
@@ -22,11 +31,11 @@ export type Donor = {
   city: string;
   available: boolean;
   lastDonationAt?: string;
-  password: string
 };
 
 export type BloodRequest = {
   _id: string;
+  requesterId?: string;
   patientName: string;
   bloodGroup: string;
   hospital: string;
@@ -35,6 +44,7 @@ export type BloodRequest = {
   urgency: 'routine' | 'urgent' | 'critical';
   status: 'open' | 'fulfilled' | 'cancelled';
   notes?: string;
+  contactNumber?: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -64,6 +74,17 @@ export const donorApi = {
 export const bloodRequestApi = {
   list: (params?: { bloodGroup?: string; city?: string; status?: BloodRequest['status'] }) =>
     api.get<BloodRequest[]>('/blood-requests', { params }).then((response) => response.data),
+  create: (payload: {
+    requesterId: string;
+    patientName: string;
+    bloodGroup: string;
+    hospital: string;
+    city: string;
+    unitsNeeded: number;
+    urgency?: BloodRequest['urgency'];
+    notes?: string;
+    contactNumber: string;
+  }) => api.post<BloodRequest>('/blood-requests', payload).then((response) => response.data),
   createResponse: (
     requestId: string,
     payload: { donor: string; status: DonorResponse['status']; message?: string }

@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const requiredEnvironmentVariables = ['MONGODB_URI'];
+const requiredEnvironmentVariables = ['MONGODB_URI', 'JWT_SECRET'];
 
 for (const variableName of requiredEnvironmentVariables) {
   if (!process.env[variableName]) {
@@ -15,4 +15,5 @@ module.exports = {
   mongodbUri: process.env.MONGODB_URI,
   databaseName: process.env.MONGODB_DB_NAME || 'LifeLink',
   clientOrigin: process.env.CLIENT_ORIGIN || '*',
+  jwtSecret: process.env.JWT_SECRET,
 };

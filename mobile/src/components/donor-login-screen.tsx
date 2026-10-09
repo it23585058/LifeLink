@@ -15,6 +15,7 @@ import axios from 'axios';
 
 import { Spacing } from '@/constants/theme';
 import { donorManagementApi } from '@/lib/donor-api';
+import { donorSession } from '@/lib/donor-session';
 
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
@@ -75,36 +76,47 @@ export function DonorLoginScreen() {
     setIsSubmitting(true);
 
     try {
-      const { token, donor } = await donorManagementApi.login(
+      const loginResponse = await donorManagementApi.login(
         nic.trim().toUpperCase(),
         password
       );
 
-      // Token can be stored here if your project uses AsyncStorage
-      // or another authentication storage solution.
-      console.log('Login successful. Token:', token);
+      await donorSession.saveSession(loginResponse.donor._id, loginResponse.token, 'donor');
 
       router.replace({
-        pathname: '/donor-home',
-        params: {
-          donorId: donor._id,
-        },
-      });
+        pathname: '/profile',
+        params: { donorId: loginResponse.donor._id },
+      } as never);
     } catch (error) {
-      if (
-        axios.isAxiosError(error) &&
-        error.response?.status === 401
-      ) {
-        setSubmitError('Incorrect NIC or password.');
-      } else if (
-        axios.isAxiosError(error) &&
-        !error.response
-      ) {
-        setSubmitError(
-          'Could not reach the server. Check your connection and try again.'
-        );
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const serverMessage = error.response?.data?.error;
+
+        if (status === 401) {
+          setSubmitError('Incorrect NIC or password.');
+        } else if (!error.response) {
+          setSubmitError(
+            'Could not reach the server. Check your connection and try again.'
+          );
+        } else if (status === 400 && typeof serverMessage === 'string') {
+          setSubmitError(serverMessage);
+        } else if (status === 404) {
+          setSubmitError(
+            'The login service is unavailable. Check that the API server is running.'
+          );
+        } else if (status && status >= 500) {
+          setSubmitError(
+            'The server could not complete login. Please try again shortly.'
+          );
+        } else {
+          setSubmitError('Login failed. Please check your details and try again.');
+        }
       } else {
-        setSubmitError('Login failed. Please try again.');
+        setSubmitError(
+          error instanceof Error
+            ? error.message
+            : 'Login failed. Please try again.'
+        );
       }
     } finally {
       setIsSubmitting(false);

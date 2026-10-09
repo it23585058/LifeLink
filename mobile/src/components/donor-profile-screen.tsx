@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import axios from 'axios';
 import {
   useLocalSearchParams,
   useRouter,
@@ -56,6 +57,9 @@ export function DonorProfileScreen() {
   const [isLoading, setIsLoading] =
     useState(true);
 
+  const [reloadKey, setReloadKey] =
+    useState(0);
+
   const [isSaving, setIsSaving] =
     useState(false);
 
@@ -73,6 +77,9 @@ export function DonorProfileScreen() {
 
   const [successMessage, setSuccessMessage] =
     useState<string | null>(null);
+
+  const [missingAccount, setMissingAccount] =
+    useState(false);
 
   // Personal information
   const [editName, setEditName] =
@@ -112,8 +119,17 @@ export function DonorProfileScreen() {
         const storedDonorId =
           await donorSession.get();
 
-        const activeId =
-          paramDonorId || storedDonorId;
+        const role = await donorSession.getRole();
+        const activeId = storedDonorId;
+
+        if (role && role !== 'donor') {
+          if (!cancelled) {
+            setErrorMessage('This is not a donor session. Please sign in as a donor.');
+            setMissingAccount(true);
+            setIsLoading(false);
+          }
+          return;
+        }
 
         if (!activeId) {
           if (!cancelled) {
@@ -172,15 +188,16 @@ export function DonorProfileScreen() {
           );
         }
       } catch (error) {
-        console.error(
-          'GET DONOR PROFILE ERROR:',
-          error
-        );
-
         if (!cancelled) {
-          setErrorMessage(
-            'Could not load your profile. Check your connection.'
-          );
+          if (axios.isAxiosError(error) && error.response?.status === 404) {
+            setErrorMessage('This donor account is no longer available. Please sign in again.');
+            setMissingAccount(true);
+          } else if (axios.isAxiosError(error) && error.response?.status === 403) {
+            setErrorMessage('This session cannot access a donor profile. Please sign in again.');
+            setMissingAccount(true);
+          } else {
+            setErrorMessage('Could not load your profile. Check your connection.');
+          }
         }
       } finally {
         if (!cancelled) {
@@ -194,7 +211,7 @@ export function DonorProfileScreen() {
     return () => {
       cancelled = true;
     };
-  }, [paramDonorId]);
+  }, [paramDonorId, reloadKey]);
 
   const goBack = () => {
     router.back();
@@ -618,17 +635,25 @@ export function DonorProfileScreen() {
               </ThemedText>
             </View>
 
-            <Pressable
-              onPress={() =>
-                router.replace('/role-select')
-              }
+            {!missingAccount && <Pressable
+              onPress={() => setReloadKey((value) => value + 1)}
               style={styles.updateButton}
+            >
+              <ThemedText type="smallBold" style={styles.buttonText}>Try Again</ThemedText>
+            </Pressable>}
+
+            <Pressable
+              onPress={async () => {
+                await donorSession.clear();
+                router.replace('/role-select');
+              }}
+              style={styles.secondaryButton}
             >
               <ThemedText
                 type="smallBold"
-                style={styles.buttonText}
+                style={styles.secondaryButtonText}
               >
-                Back to Role Select
+                {missingAccount ? 'Log out and sign in again' : 'Back to Role Select'}
               </ThemedText>
             </Pressable>
           </View>
@@ -1586,6 +1611,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 52,
     flex: 1,
+  },
+
+  secondaryButton: {
+    alignItems: 'center',
+    borderColor: palette.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    justifyContent: 'center',
+    marginTop: Spacing.two,
+    minHeight: 52,
+  },
+
+  secondaryButtonText: {
+    color: palette.ink,
   },
 
   disabledButton: {

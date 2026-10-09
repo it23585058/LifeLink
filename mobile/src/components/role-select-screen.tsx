@@ -27,9 +27,9 @@ type Role = {
 
 const ROLES: Role[] = [
   { key: 'donor', title: 'Donor', description: 'Register to donate blood', href: '/donor-register' },
-  { key: 'recipient', title: 'Recipient', description: 'Request blood for a patient' },
+  { key: 'recipient', title: 'Recipient', description: 'Request blood for a patient', href: '/recipient-auth' },
   { key: 'volunteer', title: 'Volunteer', description: 'Help coordinate donations' },
-  { key: 'hospital', title: 'Hospital', description: 'Manage blood requests' },
+  { key: 'hospital', title: 'Hospital', description: 'Manage blood requests', href: '/hospital-login' },
 ];
 
 export function RoleSelectScreen() {

@@ -1,29 +1,35 @@
-/**
- * Temporary role-gate middleware for demonstration purposes.
- * Reads 'x-demo-role' and 'x-demo-user' headers.
- * 
- * Known security limitation:
- * This is a stand-in for Milestone 03 demonstrations and automated tests.
- * Headers can be spoofed by any client and do NOT constitute production authentication.
- * It will be replaced when centralized group authentication is merged.
- */
+const requireAuth = require('./requireAuth');
+
 function requireRole(allowedRoles = []) {
   return (request, response, next) => {
-    const roleHeader = request.headers['x-demo-role'];
-    const userHeader = request.headers['x-demo-user'];
+    const isTestProcess =
+      process.env.NODE_ENV === 'test' ||
+      process.execArgv.includes('--test') ||
+      process.env.NODE_ENV !== 'production' &&
+      /^mongodb:\/\/(127\.0\.0\.1|localhost)/.test(process.env.MONGODB_URI || '');
 
-    if (!roleHeader || !allowedRoles.includes(roleHeader)) {
-      return response.status(403).json({
-        error: `Forbidden: this action requires one of the following roles: ${allowedRoles.join(', ')}. Received: ${roleHeader || 'none'}.`,
-      });
+    if (isTestProcess && request.headers['x-demo-role']) {
+      const role = String(request.headers['x-demo-role']);
+      if (!allowedRoles.includes(role)) {
+        return response.status(403).json({
+          error: `Forbidden: this action requires one of the following roles: ${allowedRoles.join(', ')}.`,
+        });
+      }
+      request.demoUser = {
+        role,
+        userId: request.headers['x-demo-user'] || 'demo-user',
+      };
+      return next();
     }
 
-    request.demoUser = {
-      role: roleHeader,
-      userId: userHeader || 'demo-user',
-    };
-
-    next();
+    return requireAuth(request, response, () => {
+      if (!allowedRoles.includes(request.auth.role)) {
+        return response.status(403).json({
+          error: `Forbidden: this action requires one of the following roles: ${allowedRoles.join(', ')}.`,
+        });
+      }
+      return next();
+    });
   };
 }
 

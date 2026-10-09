@@ -1,7 +1,27 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const Donor = require('../models/donor.model');
+const requireAuth = require('../middleware/requireAuth');
+const { jwtSecret } = require('../config/env');
 
 const router = express.Router();
+
+const publicDonorFields = '_id name bloodGroup phone city available lastDonationAt createdAt';
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function publicDonor(donor) {
+  return {
+    _id: donor._id,
+    name: donor.name,
+    bloodGroup: donor.bloodGroup,
+    phone: donor.phone,
+    city: donor.city,
+    available: donor.available,
+    lastDonationAt: donor.lastDonationAt,
+    createdAt: donor.createdAt,
+  };
+}
 
 // =========================
 // GET ALL DONORS
@@ -18,7 +38,7 @@ router.get('/', async (request, response, next) => {
 
     if (request.query.city) {
       filter.city = new RegExp(
-        `^${String(request.query.city)}$`,
+        `^${escapeRegex(String(request.query.city))}$`,
         'i'
       );
     }
@@ -28,11 +48,11 @@ router.get('/', async (request, response, next) => {
         request.query.available === 'true';
     }
 
-    const donors = await Donor.find(filter).sort({
+    const donors = await Donor.find(filter).select(publicDonorFields).sort({
       createdAt: -1,
     });
 
-    response.json(donors);
+    response.json(donors.map(publicDonor));
   } catch (error) {
     next(error);
   }
@@ -43,13 +63,6 @@ router.get('/', async (request, response, next) => {
 // =========================
 router.post('/', async (request, response, next) => {
   try {
-    console.log('CREATE DONOR BODY:', {
-      ...request.body,
-      password: request.body?.password
-        ? '********'
-        : undefined,
-    });
-
     const {
       name,
       bloodGroup,
@@ -141,23 +154,13 @@ router.post('/', async (request, response, next) => {
       recentDonationComplications,
     });
 
-    console.log(
-      'DONOR CREATED:',
-      donor._id
-    );
-
-    return response.status(201).json(donor);
-  } catch (error) {
-    console.error(
-      'CREATE DONOR ERROR:',
-      error
-    );
-
-    return response.status(500).json({
-      error:
-        error.message ||
-        'Internal server error',
+    const token = jwt.sign({ id: donor._id, role: 'donor' }, jwtSecret, { expiresIn: '7d' });
+    return response.status(201).json({
+      ...publicDonor(donor),
+      token,
     });
+  } catch (error) {
+    return next(error);
   }
 });
 
@@ -166,25 +169,25 @@ router.post('/', async (request, response, next) => {
 // =========================
 router.get(
   '/:donorId',
+  requireAuth,
   async (request, response, next) => {
     try {
-      const donor = await Donor.findById(
-        request.params.donorId
-      );
-
-      console.log(
-        'DONOR GET FROM DATABASE:',
-        {
-          id: donor?._id,
-          name: donor?.name,
-          city: donor?.city,
-        }
-      );
+      if (request.auth?.role !== 'donor') {
+        return response.status(403).json({ error: 'Donor access is required.' });
+      }
+      if (!mongoose.isValidObjectId(request.params.donorId)) {
+        return response.status(400).json({ error: 'Invalid donor ID.' });
+      }
+      const donor = await Donor.findById(request.params.donorId);
 
       if (!donor) {
         return response.status(404).json({
           error: 'Donor not found.',
         });
+      }
+
+      if (String(request.auth?.donorId) !== String(donor._id)) {
+        return response.status(403).json({ error: 'You cannot access another donor profile.' });
       }
 
       response.json(donor);
@@ -199,8 +202,18 @@ router.get(
 // =========================
 router.put(
   '/:donorId',
+  requireAuth,
   async (request, response, next) => {
     try {
+      if (request.auth?.role !== 'donor') {
+        return response.status(403).json({ error: 'Donor access is required.' });
+      }
+      if (!mongoose.isValidObjectId(request.params.donorId)) {
+        return response.status(400).json({ error: 'Invalid donor ID.' });
+      }
+      if (String(request.auth.donorId) !== String(request.params.donorId)) {
+        return response.status(403).json({ error: 'You cannot modify another donor profile.' });
+      }
       const donor =
         await Donor.findById(
           request.params.donorId
@@ -282,8 +295,18 @@ router.put(
 // =========================
 router.delete(
   '/:donorId',
+  requireAuth,
   async (request, response, next) => {
     try {
+      if (request.auth?.role !== 'donor') {
+        return response.status(403).json({ error: 'Donor access is required.' });
+      }
+      if (!mongoose.isValidObjectId(request.params.donorId)) {
+        return response.status(400).json({ error: 'Invalid donor ID.' });
+      }
+      if (String(request.auth.donorId) !== String(request.params.donorId)) {
+        return response.status(403).json({ error: 'You cannot delete another donor profile.' });
+      }
       const donor =
         await Donor.findByIdAndDelete(
           request.params.donorId

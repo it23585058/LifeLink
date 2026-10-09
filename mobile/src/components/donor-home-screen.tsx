@@ -40,13 +40,19 @@ const palette = {
 };
 
 type Section = {
-  key: 'medical' | 'history';
+  key: 'medical' | 'history' | 'hospitals';
   title: string;
   description: string;
   path: string;
 };
 
 const SECTIONS: Section[] = [
+  {
+    key: 'hospitals',
+    title: 'Hospitals & Blood Banks',
+    description: 'Find facilities, inventory, reservations, and transfers',
+    path: '/blood-banks',
+  },
   {
     key: 'medical',
     title: 'Medical Credentials',
@@ -95,8 +101,6 @@ export function DonorHomeScreen() {
     const loadDonorId = async () => {
       try {
         if (paramDonorId) {
-          await donorSession.save(paramDonorId);
-
           if (!cancelled) {
             setActiveDonorId(paramDonorId);
           }
@@ -120,11 +124,6 @@ export function DonorHomeScreen() {
           );
         }
       } catch (error) {
-        console.error(
-          'DONOR SESSION ERROR:',
-          error
-        );
-
         if (!cancelled) {
           setIsLoading(false);
           setErrorMessage(
@@ -154,21 +153,11 @@ export function DonorHomeScreen() {
     donorManagementApi
       .get(activeDonorId)
       .then((data) => {
-        console.log(
-          'DONOR FROM API:',
-          data
-        );
-
         if (!cancelled) {
           setDonor(data);
         }
       })
-      .catch((error) => {
-        console.error(
-          'GET DONOR ERROR:',
-          error
-        );
-
+      .catch(() => {
         if (!cancelled) {
           setErrorMessage(
             'Could not load your details. Check your connection.'
@@ -188,18 +177,8 @@ export function DonorHomeScreen() {
 
   const goTo = (path: string) => {
     if (!activeDonorId) {
-      console.log(
-        'Navigation blocked: donor ID missing'
-      );
       return;
     }
-
-    console.log(
-      'NAVIGATING TO:',
-      path,
-      'DONOR ID:',
-      activeDonorId
-    );
 
     router.push({
       pathname: path,

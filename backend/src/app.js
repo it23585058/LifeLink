@@ -11,6 +11,8 @@ const hospitalRoutes = require('./routes/hospitals.routes');
 const bloodInventoryRoutes = require('./routes/blood-inventory.routes');
 const reservationRoutes = require('./routes/reservations.routes');
 const transferRoutes = require('./routes/transfers.routes');
+const authRoutes = require('./routes/auth');
+const roleAuthRoutes = require('./routes/role-auth.routes');
 
 const app = express();
 
@@ -30,6 +32,8 @@ app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/blood-inventory', bloodInventoryRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/transfers', transferRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/auth', roleAuthRoutes);
 
 app.use((error, request, response, next) => {
   if (error?.name === 'MulterError') {
