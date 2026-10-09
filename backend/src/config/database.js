@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 async function connectDatabase(mongodbUri, databaseName) {
   await mongoose.connect(mongodbUri, {
@@ -8,7 +8,15 @@ async function connectDatabase(mongodbUri, databaseName) {
 }
 
 function getDatabaseStatus() {
-  return ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState];
+  return [
+    'disconnected',
+    'connected',
+    'connecting',
+    'disconnecting',
+  ][mongoose.connection.readyState];
 }
 
-module.exports = { connectDatabase, getDatabaseStatus };
+export {
+  connectDatabase,
+  getDatabaseStatus,
+};
