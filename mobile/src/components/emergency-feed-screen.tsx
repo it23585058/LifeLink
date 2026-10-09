@@ -14,6 +14,7 @@ import { SymbolView } from 'expo-symbols';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { bloodRequestApi, donorApi, type BloodRequest, type Donor, type DonorResponse } from '@/lib/api';
+import { donorSession } from '@/lib/donor-session';
 import { Spacing } from '@/constants/theme';
 
 import { ThemedText } from './themed-text';
@@ -153,7 +154,7 @@ function RequestCard({
 export function EmergencyFeedScreen() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
   const [donors, setDonors] = useState<Donor[]>([]);
-  const [selectedDonorId, setSelectedDonorId] = useState(process.env.EXPO_PUBLIC_DONOR_ID || '');
+  const [selectedDonorId, setSelectedDonorId] = useState('');
   const [responses, setResponses] = useState<Record<string, DonorResponse[]>>({});
   const [responseLoading, setResponseLoading] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -206,7 +207,18 @@ export function EmergencyFeedScreen() {
   };
 
   useEffect(() => {
-    void loadRequests();
+    let cancelled = false;
+    void donorSession.get()
+      .then((donorId) => {
+        if (!cancelled && donorId) setSelectedDonorId(donorId);
+        return loadRequests();
+      })
+      .catch(() => {
+        if (!cancelled) setErrorMessage('Could not restore your donor session. Please sign in again.');
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filteredRequests = useMemo(() => {
@@ -233,7 +245,7 @@ export function EmergencyFeedScreen() {
         ...current,
         [key]: {
           state: 'error',
-          message: 'A donor profile is required before sending a response. Configure EXPO_PUBLIC_DONOR_ID.',
+          message: 'A donor profile is required before sending a response. Please sign in again.',
         },
       }));
       return;

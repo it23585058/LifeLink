@@ -1,8 +1,20 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const Donor = require('../models/donor.model');
+const { jwtSecret } = require('../config/env');
 
 const router = express.Router();
+
+function publicDonor(donor) {
+  return {
+    _id: donor._id,
+    name: donor.name,
+    bloodGroup: donor.bloodGroup,
+    phone: donor.phone,
+    city: donor.city,
+    available: donor.available,
+  };
+}
 
 router.post('/login', async (req, res) => {
   try {
@@ -25,8 +37,8 @@ router.post('/login', async (req, res) => {
     }
 
     if (!donor.password) {
-      return res.status(500).json({
-        error: 'Password is missing for this donor in database.',
+      return res.status(401).json({
+        error: 'Incorrect NIC or password.',
       });
     }
 
@@ -38,27 +50,21 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    if (!process.env.JWT_SECRET) {
-      return res.status(500).json({
-        error: 'JWT_SECRET is missing in .env',
-      });
-    }
-
     const token = jwt.sign(
-      { id: donor._id },
-      process.env.JWT_SECRET,
+      { id: donor._id, role: 'donor' },
+      jwtSecret,
       { expiresIn: '7d' }
     );
 
     res.json({
       token,
-      donor,
+      donor: publicDonor(donor),
     });
   } catch (err) {
     console.error('LOGIN ERROR:', err);
 
     res.status(500).json({
-      error: err.message,
+      error: 'Unable to complete login.',
     });
   }
 });

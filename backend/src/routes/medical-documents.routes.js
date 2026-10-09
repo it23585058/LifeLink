@@ -3,9 +3,11 @@ const multer = require('multer');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const mongoose = require('mongoose');
 
 const Donor = require('../models/donor.model');
 const MedicalDocument = require('../models/medical-document.model');
+const requireAuth = require('../middleware/requireAuth');
 
 const router = express.Router();
 
@@ -77,9 +79,15 @@ const upload = multer({
   },
 });
 
-router.get('/:donorId', async (request, response, next) => {
+router.get('/:donorId', requireAuth, async (request, response, next) => {
   try {
     const { donorId } = request.params;
+    if (!mongoose.isValidObjectId(donorId)) {
+      return response.status(400).json({ error: 'Invalid donor ID.' });
+    }
+    if (String(request.auth.donorId) !== String(donorId)) {
+      return response.status(403).json({ error: 'You cannot access another donor’s documents.' });
+    }
 
     const donor = await Donor.findById(donorId);
 
@@ -104,10 +112,19 @@ router.get('/:donorId', async (request, response, next) => {
 
 router.post(
   '/:donorId',
+  requireAuth,
   upload.single('document'),
   async (request, response, next) => {
     try {
       const { donorId } = request.params;
+      if (!mongoose.isValidObjectId(donorId)) {
+        if (request.file) fs.unlinkSync(request.file.path);
+        return response.status(400).json({ error: 'Invalid donor ID.' });
+      }
+      if (String(request.auth.donorId) !== String(donorId)) {
+        if (request.file) fs.unlinkSync(request.file.path);
+        return response.status(403).json({ error: 'You cannot upload documents for another donor.' });
+      }
 
       const donor = await Donor.findById(donorId);
 
@@ -169,12 +186,19 @@ router.post(
 
 router.delete(
   '/:donorId/:documentId',
+  requireAuth,
   async (request, response, next) => {
     try {
       const {
         donorId,
         documentId,
       } = request.params;
+      if (!mongoose.isValidObjectId(donorId) || !mongoose.isValidObjectId(documentId)) {
+        return response.status(400).json({ error: 'Invalid donor or document ID.' });
+      }
+      if (String(request.auth.donorId) !== String(donorId)) {
+        return response.status(403).json({ error: 'You cannot delete another donor’s documents.' });
+      }
 
       const document =
         await MedicalDocument.findOne({

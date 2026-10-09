@@ -799,22 +799,6 @@ export function DonorMedicalScreen() {
         return;
       }
 
-      console.log(
-        'MEDICAL DOCUMENT DEBUG:',
-        {
-          fileName,
-          mimeType,
-          size:
-            selectedFile.size,
-          platform:
-            Platform.OS,
-          webFileExists:
-            !!webFile,
-          webFileType:
-            webFile?.type,
-        }
-      );
-
       setIsUploadingDocument(true);
 
       const uploaded =
@@ -844,14 +828,8 @@ export function DonorMedicalScreen() {
         'Medical document uploaded successfully.'
       );
     } catch (error: any) {
-      console.error(
-        'MEDICAL DOCUMENT UPLOAD ERROR:',
-        error
-      );
-
       const errorMessage =
         error?.response?.data?.error ||
-        error?.message ||
         'Could not upload the medical document. Please try again.';
 
       setDocumentMessage(

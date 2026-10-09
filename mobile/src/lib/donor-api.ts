@@ -41,6 +41,10 @@ export type DonorProfile = Donor & {
   travelRadiusKm?: number;
 };
 
+export type RegistrationResponse = DonorProfile & {
+  token?: string;
+};
+
 export type DonorInput = {
   name: string;
   bloodGroup: string;
@@ -105,9 +109,9 @@ export type MedicalDocument = {
 };
 
 export const donorManagementApi = {
-  create: (payload: DonorInput) =>
+  create: (payload: DonorInput): Promise<RegistrationResponse> =>
     api
-      .post<DonorProfile>(
+      .post<RegistrationResponse>(
         '/donors',
         payload
       )

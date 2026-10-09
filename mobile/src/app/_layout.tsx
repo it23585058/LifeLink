@@ -11,7 +11,10 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AnimatedSplashOverlay />
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack initialRouteName="landing" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="landing" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
     </ThemeProvider>
   );
 }

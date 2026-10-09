@@ -7,7 +7,7 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "seed:hospitals": "node scripts/seedHospitals.js",
-    "test": "node --test tests/member3.test.js"
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

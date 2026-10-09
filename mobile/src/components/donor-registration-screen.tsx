@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Spacing } from '@/constants/theme';
 import { donorManagementApi } from '@/lib/donor-api';
+import { donorSession } from '@/lib/donor-session';
 
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
@@ -131,8 +132,16 @@ export function DonorRegistrationScreen() {
         emergencyAlerts,
         travelRadiusKm,
       });
+      if (donor.token) {
+        await donorSession.saveSession(donor._id, donor.token, 'donor');
+      } else {
+        await donorSession.save(donor._id);
+      }
       resetForm();
-      router.replace({ pathname: '/donor-home', params: { donorId: donor._id } });
+      router.replace({
+        pathname: '/profile',
+        params: { donorId: donor._id },
+      } as never);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const serverMessage = error.response?.data?.error as string | undefined;
