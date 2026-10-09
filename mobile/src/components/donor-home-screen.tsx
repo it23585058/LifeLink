@@ -43,7 +43,7 @@ type Section = {
   key: 'medical' | 'history' | 'hospitals';
   title: string;
   description: string;
-  path: string;
+  path: '/donor-medical' | '/donation-history' | '/blood-banks';
 };
 
 const SECTIONS: Section[] = [
@@ -175,15 +175,11 @@ export function DonorHomeScreen() {
     };
   }, [activeDonorId]);
 
-  const goTo = (path: string) => {
-    if (!activeDonorId) {
-      return;
-    }
-
+  const goTo = (path: Section['path'] | typeof PROFILE_PATH) => {
     router.push({
       pathname: path,
       params: {
-        donorId: activeDonorId,
+        ...(activeDonorId ? { donorId: activeDonorId } : {}),
       },
     } as Href);
   };

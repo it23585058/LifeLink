@@ -473,9 +473,19 @@ export function DonorMedicalScreen() {
         const storedDonorId =
           await donorSession.get();
 
+        const role = await donorSession.getRole();
+        if (role && role !== 'donor') {
+          if (!cancelled) {
+            setErrorMessage('This screen is available only to donor accounts.');
+          }
+          return;
+        }
+
+        // Use the authenticated session as the source of truth. Route
+        // parameters are retained only for backwards-compatible navigation.
         const activeId =
-          paramDonorId ||
-          storedDonorId;
+          storedDonorId ||
+          paramDonorId;
 
         if (!activeId) {
           if (!cancelled) {

@@ -2,6 +2,7 @@ const express = require('express');
 
 const BloodRequest = require('../models/blood-request.model');
 const DonorResponse = require('../models/donor-response.model');
+const Donor = require('../models/donor.model');
 const requireAuth = require('../middleware/requireAuth');
 
 const router = express.Router();
@@ -129,6 +130,13 @@ router.post('/:requestId/responses', requireAuth, async (request, response, next
     }
     if (String(request.body.donor) !== String(request.auth.donorId)) {
       return response.status(403).json({ error: 'You can only respond as the authenticated donor.' });
+    }
+    const donor = await Donor.findOne({
+      _id: request.auth.donorId,
+      available: true,
+    }).select('_id');
+    if (!donor) {
+      return response.status(403).json({ error: 'Your donor availability is turned off.' });
     }
     const donorResponse = await DonorResponse.create({
       ...request.body,

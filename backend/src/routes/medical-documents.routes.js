@@ -82,6 +82,9 @@ const upload = multer({
 router.get('/:donorId', requireAuth, async (request, response, next) => {
   try {
     const { donorId } = request.params;
+    if (request.auth?.role !== 'donor') {
+      return response.status(403).json({ error: 'Donor access is required.' });
+    }
     if (!mongoose.isValidObjectId(donorId)) {
       return response.status(400).json({ error: 'Invalid donor ID.' });
     }
@@ -117,6 +120,10 @@ router.post(
   async (request, response, next) => {
     try {
       const { donorId } = request.params;
+      if (request.auth?.role !== 'donor') {
+        if (request.file) fs.unlinkSync(request.file.path);
+        return response.status(403).json({ error: 'Donor access is required.' });
+      }
       if (!mongoose.isValidObjectId(donorId)) {
         if (request.file) fs.unlinkSync(request.file.path);
         return response.status(400).json({ error: 'Invalid donor ID.' });
@@ -193,6 +200,9 @@ router.delete(
         donorId,
         documentId,
       } = request.params;
+      if (request.auth?.role !== 'donor') {
+        return response.status(403).json({ error: 'Donor access is required.' });
+      }
       if (!mongoose.isValidObjectId(donorId) || !mongoose.isValidObjectId(documentId)) {
         return response.status(400).json({ error: 'Invalid donor or document ID.' });
       }
