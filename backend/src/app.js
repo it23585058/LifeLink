@@ -9,7 +9,7 @@ const hospitalRoutes = require('./routes/hospitals.routes');
 const bloodInventoryRoutes = require('./routes/blood-inventory.routes');
 const reservationRoutes = require('./routes/reservations.routes');
 const transferRoutes = require('./routes/transfers.routes');
-
+const bloodRequestRoutes = require("./routes/bloodRequestRoutes");
 const app = express();
 
 app.use(cors({ origin: clientOrigin === '*' ? true : clientOrigin }));
@@ -22,6 +22,8 @@ app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/blood-inventory', bloodInventoryRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/transfers', transferRoutes);
+app.use("/api/blood-requests", bloodRequestRoutes);
+
 
 app.use((error, request, response, next) => {
   if (error.name === 'ValidationError') {
