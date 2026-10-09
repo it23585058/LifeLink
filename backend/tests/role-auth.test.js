@@ -9,6 +9,7 @@ let mongod;
 let app;
 let Donor;
 let Recipient;
+let BloodRequest;
 
 test.before(async () => {
   process.env.JWT_SECRET = 'role-auth-test-secret';
@@ -18,6 +19,7 @@ test.before(async () => {
   await mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.MONGODB_DB_NAME });
   Donor = require('../src/models/donor.model');
   Recipient = require('../src/models/recipient.model');
+  BloodRequest = require('../src/models/blood-request.model');
   app = require('../src/app');
 });
 
@@ -29,6 +31,7 @@ test.after(async () => {
 test.beforeEach(async () => {
   await Donor.deleteMany({});
   await Recipient.deleteMany({});
+  await BloodRequest.deleteMany({});
 });
 
 test('donor profile requires a valid donor JWT and returns the own profile', async () => {
@@ -129,4 +132,63 @@ test('recipient registration, profile retrieval, and update use JWT ownership', 
   const unauthenticated = await request(app).get('/api/auth/recipients/me');
   process.env.NODE_ENV = previousNodeEnv;
   assert.equal(unauthenticated.status, 401);
+});
+
+test('unavailable donors are excluded from search, including alternate availability queries', async () => {
+  await Donor.create([
+    {
+      name: 'Available Donor',
+      bloodGroup: 'A+',
+      phone: '0710000001',
+      city: 'Colombo',
+      nic: '920000001V',
+      password: 'password123',
+      available: true,
+    },
+    {
+      name: 'Unavailable Donor',
+      bloodGroup: 'A+',
+      phone: '0710000002',
+      city: 'Colombo',
+      nic: '920000002V',
+      password: 'password123',
+      available: false,
+    },
+  ]);
+
+  const all = await request(app).get('/api/donors');
+  const unavailableQuery = await request(app).get('/api/donors?available=false');
+
+  assert.equal(all.status, 200);
+  assert.equal(unavailableQuery.status, 200);
+  assert.deepEqual(all.body.map((donor) => donor.name), ['Available Donor']);
+  assert.deepEqual(unavailableQuery.body.map((donor) => donor.name), ['Available Donor']);
+});
+
+test('unavailable donors cannot create new donor responses', async () => {
+  const donor = await Donor.create({
+    name: 'Unavailable Responder',
+    bloodGroup: 'O+',
+    phone: '0710000010',
+    city: 'Colombo',
+    nic: '920000010V',
+    password: 'password123',
+    available: false,
+  });
+  const bloodRequest = await BloodRequest.create({
+    patientName: 'Patient',
+    bloodGroup: 'O+',
+    hospital: 'Test Hospital',
+    city: 'Colombo',
+    unitsNeeded: 1,
+    contactNumber: '0710000099',
+  });
+  const token = jwt.sign({ id: donor._id, role: 'donor' }, process.env.JWT_SECRET);
+
+  const response = await request(app)
+    .post(`/api/blood-requests/${bloodRequest._id}/responses`)
+    .set('Authorization', `Bearer ${token}`)
+    .send({ donor: donor._id, status: 'offered' });
+
+  assert.equal(response.status, 403);
 });

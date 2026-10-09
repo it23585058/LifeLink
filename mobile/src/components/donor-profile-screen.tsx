@@ -347,6 +347,33 @@ export function DonorProfileScreen() {
     }
   };
 
+  const handleAvailabilityChange = async (value: boolean) => {
+    if (!donorId || !donor) return;
+
+    const previousValue = donor.available;
+    setDonor({ ...donor, available: value });
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    try {
+      const updated = await donorManagementApi.update(donorId, {
+        available: value,
+      });
+      setDonor(updated);
+      setSuccessMessage(
+        value
+          ? 'You are now available to donate.'
+          : 'You are now unavailable to donate.'
+      );
+    } catch {
+      setDonor({ ...donor, available: previousValue });
+      setErrorMessage('Could not update your availability. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleUpdate = async () => {
     if (!donorId) {
       setErrorMessage(
@@ -933,6 +960,39 @@ export function DonorProfileScreen() {
                       type="smallBold"
                       style={styles.switchTitle}
                     >
+                      Available to Donate
+                    </ThemedText>
+                    <ThemedText
+                      type="small"
+                      style={styles.switchDescription}
+                    >
+                      {donor.available
+                        ? 'You can appear in donor searches and be considered for requests.'
+                        : 'You are hidden from donor searches and new donor matching.'}
+                    </ThemedText>
+                  </View>
+                  <Switch
+                    value={donor.available === true}
+                    onValueChange={handleAvailabilityChange}
+                    disabled={isSaving}
+                    trackColor={{
+                      false: '#D6DDEA',
+                      true: '#A8DCC2',
+                    }}
+                    thumbColor={
+                      donor.available === true
+                        ? palette.green
+                        : '#FFFFFF'
+                    }
+                  />
+                </View>
+
+                <View style={styles.switchRow}>
+                  <View style={styles.switchTextBox}>
+                    <ThemedText
+                      type="smallBold"
+                      style={styles.switchTitle}
+                    >
                       Emergency Alerts
                     </ThemedText>
 
@@ -1091,6 +1151,28 @@ export function DonorProfileScreen() {
                   </ThemedText>
                 </View>
               </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Medical Credentials"
+                onPress={() =>
+                  router.push({
+                    pathname: '/donor-medical',
+                    params: { donorId: donorId ?? undefined },
+                  } as never)
+                }
+                style={styles.navigationCard}
+              >
+                <View style={styles.navigationCardCopy}>
+                  <ThemedText style={styles.navigationCardTitle}>
+                    Medical Credentials
+                  </ThemedText>
+                  <ThemedText type="small" style={styles.navigationCardText}>
+                    View and update your complete medical information and documents
+                  </ThemedText>
+                </View>
+                <ThemedText style={styles.navigationCardChevron}>›</ThemedText>
+              </Pressable>
 
               <Pressable
                 onPress={startEditing}
@@ -1479,6 +1561,39 @@ const styles = StyleSheet.create({
     color: palette.ink,
     fontSize: 18,
     marginBottom: Spacing.two,
+  },
+
+  navigationCard: {
+    alignItems: 'center',
+    backgroundColor: palette.surface,
+    borderColor: palette.border,
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: Spacing.three,
+  },
+
+  navigationCardCopy: {
+    flex: 1,
+    paddingRight: Spacing.two,
+  },
+
+  navigationCardTitle: {
+    color: palette.ink,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
+  navigationCardText: {
+    color: palette.muted,
+    lineHeight: 18,
+    marginTop: Spacing.one,
+  },
+
+  navigationCardChevron: {
+    color: palette.red,
+    fontSize: 28,
   },
 
   infoRow: {

@@ -28,7 +28,7 @@ function publicDonor(donor) {
 // =========================
 router.get('/', async (request, response, next) => {
   try {
-    const filter = {};
+    const filter = { available: true };
 
     if (request.query.bloodGroup) {
       filter.bloodGroup = String(
@@ -41,11 +41,6 @@ router.get('/', async (request, response, next) => {
         `^${escapeRegex(String(request.query.city))}$`,
         'i'
       );
-    }
-
-    if (request.query.available !== undefined) {
-      filter.available =
-        request.query.available === 'true';
     }
 
     const donors = await Donor.find(filter).select(publicDonorFields).sort({
