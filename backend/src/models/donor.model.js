@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const donorSchema = new mongoose.Schema(
   {
@@ -223,4 +223,4 @@ donorSchema.set('toJSON', {
 
 const Donor = mongoose.model('Donor', donorSchema);
 
-export default Donor;
+module.exports = Donor;

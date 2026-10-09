@@ -53,7 +53,7 @@ function DonorCard({ donor }: { donor: Donor }) {
         <View style={styles.nameBlock}>
           <ThemedText type="smallBold" style={styles.donorName} numberOfLines={1}>{donor.name}</ThemedText>
           <View style={styles.locationRow}>
-            <SymbolView name={{ ios: 'mappin', android: 'location_on', web: 'location_on' }} size={13} tintColor={m02Colors.muted} />
+            <SymbolView name={{ ios: 'mappin', android: 'location_on', web: 'location_on' }} size={13} tintColor="#D5DCE8" />
             <ThemedText type="small" style={styles.locationText}>{donor.city}</ThemedText>
           </View>
         </View>
@@ -232,17 +232,17 @@ const styles = StyleSheet.create({
   avatar: { alignItems: 'center', backgroundColor: '#F8D9D9', borderRadius: 24, height: 48, justifyContent: 'center', width: 48 },
   avatarText: { color: '#9B2C2C', fontSize: 20, fontWeight: '700' },
   nameBlock: { flex: 1, gap: 2 },
-  donorName: { color: m02Colors.ink, fontSize: 17, lineHeight: 21 },
+  donorName: { color: '#F8FAFC', fontSize: 17, lineHeight: 21 },
   locationRow: { alignItems: 'center', flexDirection: 'row', gap: 3 },
-  locationText: { color: m02Colors.muted, fontSize: 12 },
+  locationText: { color: '#D5DCE8', fontSize: 12 },
   bloodBadge: { alignItems: 'center', backgroundColor: '#C94848', borderRadius: 10, minWidth: 52, paddingHorizontal: 8, paddingVertical: 8 },
   bloodText: { color: '#FFFFFF', fontWeight: '700' },
-  bloodCaption: { color: m02Colors.muted, fontSize: 8, letterSpacing: 1 },
+  bloodCaption: { color: '#FFE7EE', fontSize: 8, letterSpacing: 1 },
   cardDetails: { alignItems: 'center', flexDirection: 'row', gap: Spacing.one },
   statusDot: { borderRadius: 4, height: 8, width: 8 },
   availableDot: { backgroundColor: '#2F9E68' },
   unavailableDot: { backgroundColor: '#8F9198' },
-  statusText: { fontWeight: '600' },
+  statusText: { color: '#F8FAFC', fontWeight: '600' },
   infoPanel: { alignItems: 'center', backgroundColor: '#F1F6FF', borderColor: '#D8E5FA', borderRadius: 6, borderWidth: 1, flexDirection: 'row', gap: Spacing.one, paddingHorizontal: Spacing.two, paddingVertical: 10 },
   infoText: { color: m02Colors.ink, fontSize: 12 },
   stateContainer: { alignItems: 'center', gap: Spacing.two, paddingHorizontal: Spacing.three, paddingVertical: Spacing.five },

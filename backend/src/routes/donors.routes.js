@@ -1,5 +1,5 @@
-import express from 'express';
-import Donor from '../models/donor.model.js';
+const express = require('express');
+const Donor = require('../models/donor.model');
 
 const router = express.Router();
 
@@ -302,4 +302,4 @@ router.delete(
   }
 );
 
-export default router;
+module.exports = router;

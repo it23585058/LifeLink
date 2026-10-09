@@ -1,11 +1,11 @@
-import express from 'express';
-import multer from 'multer';
-import fs from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
+const express = require('express');
+const multer = require('multer');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
 
-import Donor from '../models/donor.model.js';
-import MedicalDocument from '../models/medical-document.model.js';
+const Donor = require('../models/donor.model');
+const MedicalDocument = require('../models/medical-document.model');
 
 const router = express.Router();
 
@@ -206,4 +206,4 @@ router.delete(
   }
 );
 
-export default router;
+module.exports = router;
