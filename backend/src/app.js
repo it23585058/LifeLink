@@ -1,17 +1,16 @@
-```javascript
-import cors from 'cors';
-import express from 'express';
+﻿const cors = require('cors');
+const express = require('express');
 
-import { clientOrigin } from './config/env.js';
+const { clientOrigin } = require('./config/env');
 
-import healthRoutes from './routes/health.routes.js';
-import donorRoutes from './routes/donors.routes.js';
-import bloodRequestRoutes from './routes/blood-requests.routes.js';
-import medicalDocumentRoutes from './routes/medical-documents.routes.js';
-import hospitalRoutes from './routes/hospitals.routes.js';
-import bloodInventoryRoutes from './routes/blood-inventory.routes.js';
-import reservationRoutes from './routes/reservations.routes.js';
-import transferRoutes from './routes/transfers.routes.js';
+const healthRoutes = require('./routes/health.routes');
+const donorRoutes = require('./routes/donors.routes');
+const bloodRequestRoutes = require('./routes/blood-requests.routes');
+const medicalDocumentRoutes = require('./routes/medical-documents.routes');
+const hospitalRoutes = require('./routes/hospitals.routes');
+const bloodInventoryRoutes = require('./routes/blood-inventory.routes');
+const reservationRoutes = require('./routes/reservations.routes');
+const transferRoutes = require('./routes/transfers.routes');
 
 const app = express();
 
@@ -70,5 +69,4 @@ app.use((error, request, response, next) => {
   });
 });
 
-export default app;
-```
+module.exports = app;

@@ -1,6 +1,6 @@
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import Donor from '../models/donor.model.js';
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const Donor = require('../models/donor.model');
 
 const router = express.Router();
 
@@ -17,12 +17,6 @@ router.post('/login', async (req, res) => {
     const donor = await Donor.findOne({
       nic: nic.trim().toUpperCase(),
     }).select('+password');
-
-    console.log('LOGIN DEBUG');
-    console.log('NIC:', nic);
-    console.log('Donor found:', !!donor);
-    console.log('Password received:', !!password);
-    console.log('Password from DB:', !!donor?.password);
 
     if (!donor) {
       return res.status(401).json({
@@ -69,4 +63,4 @@ router.post('/login', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

@@ -11,7 +11,7 @@ for (const variableName of requiredEnvironmentVariables) {
 }
 
 module.exports = {
-  port: Number(process.env.PORT || 4000),
+  port: Number(process.env.PORT || 5000),
   mongodbUri: process.env.MONGODB_URI,
   databaseName: process.env.MONGODB_DB_NAME || 'LifeLink',
   clientOrigin: process.env.CLIENT_ORIGIN || '*',

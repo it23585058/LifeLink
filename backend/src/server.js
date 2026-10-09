@@ -1,13 +1,11 @@
-import dns from 'node:dns';
+const dns = require('node:dns');
 
-import app from './app.js';
-import { connectDatabase } from './config/database.js';
-import { databaseName, mongodbUri } from './config/env.js';
-import authRoutes from './routes/auth.js';
+const app = require('./app');
+const { connectDatabase } = require('./config/database');
+const { databaseName, mongodbUri, port } = require('./config/env');
+const authRoutes = require('./routes/auth');
 
 dns.setServers(['1.1.1.1']);
-
-const port = Number(process.env.PORT || 5000);
 
 app.use('/api/auth', authRoutes);
 

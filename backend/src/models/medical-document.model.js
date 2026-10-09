@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const medicalDocumentSchema = new mongoose.Schema(
   {
@@ -49,4 +49,4 @@ const MedicalDocument = mongoose.model(
   medicalDocumentSchema
 );
 
-export default MedicalDocument;
+module.exports = MedicalDocument;
